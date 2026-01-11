@@ -8,7 +8,7 @@ export default function App() {
   return (
     <Router>
       <nav className="sticky w-screen p-2 w-full bg-gray-900">
-        <Link to="/">Home</Link> | <Link to="/About">About</Link>
+        <Link to="/">Home</Link> | <Link to="/About">Facts About You</Link>
       </nav>
       <main>
         <Routes>
