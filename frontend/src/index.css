@@ -17,6 +17,22 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.album-height {
+  height: 50vh;
+}
+
+.song-title {
+  font-size: 2em;
+}
+
+.band-title {
+  font-size: 1em;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
 a {
   /* font-weight: 500; */
   /* color: #fcfcfc; */
