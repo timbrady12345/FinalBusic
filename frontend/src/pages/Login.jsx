@@ -45,8 +45,9 @@ export default function Login() {
         setSuccess(data.error || "You Logged In!");
       }
 
-      // localStorage.setItem("token", data.token);
       setUser(data.user);
+      localStorage.setItem("token", data.token);
+
       // eslint-disable-next-line no-unused-vars
     } catch (err) {
       setError("Something went wrong");
