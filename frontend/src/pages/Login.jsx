@@ -1,12 +1,17 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { UserContext } from "../conProv/UserContext";
 
 export default function Login() {
+  //User
+  const { setUser } = useContext(UserContext);
+
   // LOGIN STATE
-  const [loginEmail, setLoginEmail] = useState("");
+  const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
 
   // SIGNUP STATE
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupUsername, setUsername] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
 
   const [error, setError] = useState("");
@@ -24,24 +29,24 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: loginEmail,
+          username: loginUsername,
           password: loginPassword,
         }),
       });
 
       const data = await res.json();
+      console.log(data);
 
       if (!res.ok) {
         setError(data.error || "Login failed");
         setLoading(false);
         return;
       } else {
-        setSuccess(data.error || "Woo!");
+        setSuccess(data.error || "You Logged In!");
       }
 
       // localStorage.setItem("token", data.token);
-
-      setSuccess("User created successfully! You can now log in.");
+      setUser(data.user);
       // eslint-disable-next-line no-unused-vars
     } catch (err) {
       setError("Something went wrong");
@@ -61,6 +66,7 @@ export default function Login() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           email: signupEmail,
+          username: signupUsername,
           password: signupPassword,
         }),
       });
@@ -72,7 +78,7 @@ export default function Login() {
         setLoading(false);
         return;
       } else {
-        setError(data.error || "Woo!");
+        setSuccess(data.error || "Woo!");
       }
 
       //window.location.href = "/Login";
@@ -91,13 +97,11 @@ export default function Login() {
         <form onSubmit={handleLogin}>
           <h2>Login</h2>
 
-          {error && <p className="error">{}</p>}
-
           <input
-            type="email"
-            placeholder="Email"
-            value={loginEmail}
-            onChange={(e) => setLoginEmail(e.target.value)}
+            type="username"
+            placeholder="Username"
+            value={loginUsername}
+            onChange={(e) => setLoginUsername(e.target.value)}
             required
           />
 
@@ -120,14 +124,19 @@ export default function Login() {
         <form onSubmit={handleSignup}>
           <h2>Sign Up</h2>
 
-          {error && <p className="error">{error}</p>}
-          {success && <p className="success">{success}</p>}
-
           <input
             type="email"
             placeholder="Email"
             value={signupEmail}
             onChange={(e) => setSignupEmail(e.target.value)}
+            required
+          />
+
+          <input
+            type="username"
+            placeholder="Username"
+            value={signupUsername}
+            onChange={(e) => setUsername(e.target.value)}
             required
           />
 
@@ -144,6 +153,8 @@ export default function Login() {
           </button>
         </form>
       </div>
+      {error && <p className="error">{error}</p>}
+      {success && <p className="success">{success}</p>}
     </div>
   );
 }

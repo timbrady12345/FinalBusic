@@ -42,20 +42,23 @@ connect();
 
 // Schema + Model
 const userSchema = new mongoose.Schema({
-  email: { type: String, required: true, unique: true },
+  email: { type: String, required: false, unique: true },
+  username: { type: String, required: true, unique: true },
   passwordHash: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
-
+//sets the schema in the DB
 const User = mongoose.model("User", userSchema);
 
 // SIGNUP
 app.post("/api/signup", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, username, password } = req.body;
 
   // Basic validation
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password required" });
+  if (!email || !password || !username) {
+    return res
+      .status(400)
+      .json({ error: "Email, Username, and password required" });
   }
 
   try {
@@ -63,10 +66,14 @@ app.post("/api/signup", async (req, res) => {
     if (existing) {
       return res.status(400).json({ error: "Email already in use" });
     }
+    const existingUn = await User.findOne({ username });
+    if (existingUn) {
+      return res.status(400).json({ error: "Username already in use" });
+    }
 
     const passwordHash = await bcrypt.hash(password, 10);
 
-    const user = await User.create({ email, passwordHash });
+    const user = await User.create({ email, username, passwordHash });
 
     res.json({ message: "User created", userId: user._id });
   } catch (err) {
@@ -77,17 +84,17 @@ app.post("/api/signup", async (req, res) => {
 
 // LOGIN
 app.post("/api/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
 
   // Basic validation
-  if (!email || !password) {
-    return res.status(400).json({ error: "Email and password required" });
+  if (!username || !password) {
+    return res.status(400).json({ error: "Username and password required" });
   }
 
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ username });
     if (!user) {
-      return res.status(400).json({ error: "Invalid email" });
+      return res.status(400).json({ error: "Invalid username" });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
@@ -96,12 +103,18 @@ app.post("/api/login", async (req, res) => {
     }
 
     const token = jwt.sign(
-      { userId: user._id, email: user.email },
+      { userId: user._id, username: user.username },
       process.env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
-    res.json({ token });
+    res.json({
+      token,
+      user: {
+        username: user.username,
+        email: user.email,
+      },
+    });
   } catch (err) {
     console.error("Login error:", err);
     res.status(500).json({ error: "Server error" });
