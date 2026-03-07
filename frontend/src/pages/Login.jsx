@@ -92,9 +92,12 @@ export default function Login() {
   };
 
   return (
-    <div>
+    <div className="p-2">
+      <div className="flex h-32 text-3xl w-screen items-center justify-center">
+        Are you Chinese?
+      </div>
       {/* LOGIN */}
-      <div className="login-container">
+      <div className="login-container flex w-screen justify-center">
         <form onSubmit={handleLogin}>
           <h2>Login</h2>
 
@@ -121,7 +124,7 @@ export default function Login() {
       </div>
 
       {/* SIGNUP */}
-      <div className="signup-container">
+      <div className="signup-container flex w-screen justify-center">
         <form onSubmit={handleSignup}>
           <h2>Sign Up</h2>
 
@@ -154,8 +157,10 @@ export default function Login() {
           </button>
         </form>
       </div>
-      {error && <p className="error">{error}</p>}
-      {success && <p className="success">{success}</p>}
+      {error && <p className="error flex w-screen justify-center">{error}</p>}
+      {success && (
+        <p className="success flex w-screen justify-center">{success}</p>
+      )}
     </div>
   );
 }

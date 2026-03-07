@@ -121,6 +121,17 @@ app.post("/api/login", async (req, res) => {
   }
 });
 
+// GET USER COUNT
+app.get("/api/users/count", async (req, res) => {
+  try {
+    const count = await User.countDocuments();
+    res.json({ count });
+  } catch (err) {
+    console.error("Count error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Start server
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
