@@ -94,7 +94,7 @@ export default function Login() {
   return (
     <div className="p-2">
       <div className="flex h-32 text-3xl w-screen items-center justify-center">
-        Are you Chinese?
+        Busic
       </div>
       {/* LOGIN */}
       <div className="login-container flex w-screen justify-center">

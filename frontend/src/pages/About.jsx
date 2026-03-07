@@ -15,7 +15,7 @@ export default function About() {
       <h1 className="text-yellow-500 h-8">你现在是中国人</h1>
 
       <h1 className="flex items-center justify-center text-yellow-500 h-[calc(100vh-2rem)]">
-        Yes. You and {count} other people are Chinese
+        You and {count} other people are Chinese
       </h1>
     </div>
   );
