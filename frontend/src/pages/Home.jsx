@@ -70,7 +70,7 @@ export default function Home() {
           </div>
         </div>
       </div> */}
-      <h1 className="flex items-center text-yellow-500 h-[calc(100vh-2rem)]">
+      <h1 className="flex items-center justify-center text-yellow-500 h-[calc(100vh-2rem)]">
         You and {count - 1} other people use Busic
       </h1>
       {/* //Bottom */}
