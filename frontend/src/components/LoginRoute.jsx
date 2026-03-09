@@ -7,7 +7,7 @@ export default function LoginRoute({ children }) {
   const { user } = useContext(UserContext);
 
   if (user) {
-    return <Navigate to="/About" replace />;
+    return <Navigate to="/" replace />;
   }
 
   return children;

@@ -1,9 +1,10 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
-import About from "./pages/About";
 import Error from "./pages/Error";
 import Login from "./pages/Login";
+import Recipes from "./pages/Recipes";
+import Songs from "./pages/Songs";
 import { useContext } from "react";
 import { UserProvider } from "./conProv/UserProvider";
 import { UserContext } from "./conProv/UserContext";
@@ -24,10 +25,13 @@ function AppContent() {
   return (
     <Router>
       {user && (
-        <div className="flex justify-between w-screen bg-gray-900 p-2 sticky top-0">
-          <nav className="flex gap-4 text-white items-center h-8">
-            <Link to="/">Home</Link>
-            <Link to="/About">Facts About You</Link>
+        <div className="flex justify-between w-screen bg-gray-500 p-2 sticky top-0">
+          <nav className="flex gap-4 text-white items-center h-8 h-full p-4 flex flex-row">
+            <Link className="w-auto pr-8 text-left" to="/">
+              <h1>Busic</h1>
+            </Link>
+            <Link to="/Songs">Songs</Link>
+            <Link to="/Recipes">Recipes</Link>
           </nav>
 
           <div className="text-white flex items-center gap-4">
@@ -58,10 +62,18 @@ function AppContent() {
             }
           />
           <Route
-            path="/About"
+            path="/Recipes"
             element={
               <ProtectedRoute>
-                <About />
+                <Recipes />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/Songs"
+            element={
+              <ProtectedRoute>
+                <Songs />
               </ProtectedRoute>
             }
           />
