@@ -12,7 +12,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="flex flex-col  w-full min-h-screen">
+    <div className="flex flex-col w-full h-[calc(100vhrem)]">
       {/* //Top */}
       {/* <div className="h-full p-4 bg-gray-500 flex flex-row">
         <div className="w-auto pr-8 text-left">
@@ -70,9 +70,9 @@ export default function Home() {
           </div>
         </div>
       </div> */}
-      <h1 className="flex items-center justify-center text-yellow-500 h-[calc(100vh-2rem)]">
-        You and {count - 1} other people use Busic
-      </h1>
+      <div className="flex items-center justify-center text-yellow-500 h-[calc(100vh-11rem)]">
+        <h1>You and {count - 1} other people use Busic</h1>
+      </div>
       {/* //Bottom */}
       <div className="h-full p-4 bg-indigo-900 text-center">
         <h4>Created by Timothy Brady</h4>
