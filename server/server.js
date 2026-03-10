@@ -14,7 +14,7 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-app.use(cors());
+app.use(cors({ origin: "https://timbrady12345.github.io" }));
 
 // Ensure required env vars exist
 if (!process.env.MONGO_URI) {
