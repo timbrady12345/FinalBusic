@@ -46,6 +46,7 @@ export default function Login() {
       }
 
       setUser(data.user);
+      console.log("Full response:", data);
       localStorage.setItem("token", data.token);
 
       // eslint-disable-next-line no-unused-vars
