@@ -5,7 +5,7 @@ export default function Home() {
   const [count, setCount] = useState(0);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/users/count")
+    fetch(`${import.meta.env.VITE_API_URL}/api/users/count`)
       .then((res) => res.json())
       .then((data) => setCount(data.count))
       .catch((err) => console.error("Error fetching count:", err));
