@@ -1,68 +1,108 @@
 import { useState } from "react";
+import SongsView from "../components/SongsView";
+import BusicView from "../components/BusicView";
 
 export default function Songs() {
-  const [chVisible, setChVisible] = useState(false);
-  const [busicVisible, setBusicVisible] = useState(false);
-  return (
-    <div className="flex flex-col  w-full min-h-screen">
-      {/* //Middle */}
-      {/* Make a grid of 4 images */}
-      {/* Collaps Section */}
-      <div className="inline-flex flex-row">
-        <div className="w-1/4 bg-gray-900">
-          <div className="border-gray-700 border-b"> Songs:</div>
-          <a
-            className="pb-1"
-            href="#"
-            onClick={(e) => {
-              e.preventDefault();
-              if (chVisible == false || busicVisible == true) {
-                setChVisible(true);
-                setBusicVisible(false);
-              }
-            }}
-          >
-            Coming Home
-          </a>
-        </div>
+  const [activeSong, setActiveSong] = useState(null);
+  const [songs, setSongs] = useState([]);
+  const [adding, setAdding] = useState(false);
+  const [newSongTitle, setNewSongTitle] = useState("");
+  const [newSongArtist, setNewSongArtist] = useState("");
 
-        {/* MAIN SCREEN */}
-        <div className="h-screen w-full bg-gray-800">
-          {/* Horizontal Boxes */}
-          {busicVisible && (
-            <div className="inline-flex flex-row">
-              {/* Vertical */}
-              <div className="flex flex-col p-2">
-                <div>Top Left</div>
-                <div>Bottom Left</div>
-              </div>
-              <div className="flex flex-col p-2">
-                <div>Top Right</div>
-                <div>Bottom Right</div>
-              </div>
+  const handleAddSong = () => {
+    if (!newSongTitle.trim()) return;
+    const newSong = {
+      id: Date.now(),
+      title: newSongTitle,
+      artist: newSongArtist,
+    };
+    setSongs([...songs, newSong]);
+    setActiveSong(newSong);
+    setNewSongTitle("");
+    setNewSongArtist("");
+    setAdding(false);
+  };
+
+  return (
+    <div className="inline-flex flex-row w-full">
+      <div className="w-1/4 bg-gray-900">
+        <div className="border-gray-700 border-b">Songs:</div>
+
+        {/* Song List */}
+        {songs.map((song) => (
+          <div
+            key={song.id}
+            className="border-gray-700 border-b cursor-pointer hover:bg-gray-700 p-1"
+            onClick={() => setActiveSong(song)}
+          >
+            {song.title}
+          </div>
+        ))}
+
+        {/* Add Song Form */}
+        {adding ? (
+          <div className="flex flex-col gap-1 p-2">
+            <input
+              className="bg-gray-700 text-white p-1 text-sm"
+              placeholder="Song title"
+              value={newSongTitle}
+              onChange={(e) => setNewSongTitle(e.target.value)}
+            />
+            <input
+              className="bg-gray-700 text-white p-1 text-sm"
+              placeholder="Artist"
+              value={newSongArtist}
+              onChange={(e) => setNewSongArtist(e.target.value)}
+            />
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddSong}
+                className="text-green-400 text-sm"
+              >
+                Add
+              </button>
+              <button
+                onClick={() => setAdding(false)}
+                className="text-red-400 text-sm"
+              >
+                Cancel
+              </button>
             </div>
-          )}
-          {/* ----------------------------------- */}
-          {!busicVisible && chVisible && (
-            <div className="inline-flex flex-row w-full min-h-screen">
-              {/* Vertical */}
-              <div className="flex flex-col p-2 w-full">
-                <div className="w-fit">
-                  <div className="song-title">Coming Home</div>
-                  <div className="flex band-title justify-end">
-                    By: The Mellows
-                  </div>
-                </div>
-              </div>
-              {/* ml-auto*/}
-              <div className="flex flex-col p-4 album-height w-full">
-                <div className="w-60 h-60 bg-white">Album Cover</div>
-                <div>Song Facts</div>
-              </div>
-            </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div
+            className="border-gray-700 border-b cursor-pointer hover:bg-gray-700 p-1"
+            onClick={() => setAdding(true)}
+          >
+            Add Song +
+          </div>
+        )}
+      </div>
+
+      {/* Main View */}
+      <div className="h-screen w-full bg-gray-800">
+        {activeSong ? <SongsView song={activeSong} /> : <BusicView />}
       </div>
     </div>
   );
 }
+// export default function Songs() {
+//   const [songs, setSongs] = useState([]); // fetched from API
+//   const [activeSong, setActiveSong] = useState(null);
+
+//   return (
+//     <div className="inline-flex flex-row">
+//       <div className="w-1/4 bg-gray-900">
+//         {songs.map(song => (
+//           <div key={song._id} onClick={() => setActiveSong(song)}>
+//             {song.title}
+//           </div>
+//         ))}
+//       </div>
+
+//       <div className="h-screen w-full bg-gray-800">
+//         {activeSong ? <SongView song={activeSong} /> : <BusicView />}
+//       </div>
+//     </div>
+//   );
+// }
