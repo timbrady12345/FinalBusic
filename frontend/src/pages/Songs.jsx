@@ -1,6 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import SongsView from "../components/SongsView";
 import BusicView from "../components/BusicView";
+
+const API = import.meta.env.VITE_API_URL;
+const authHeader = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+});
 
 export default function Songs() {
   const [activeSong, setActiveSong] = useState(null);
@@ -9,29 +15,105 @@ export default function Songs() {
   const [newSongTitle, setNewSongTitle] = useState("");
   const [newSongArtist, setNewSongArtist] = useState("");
 
-  const handleAddSong = () => {
-    if (!newSongTitle.trim()) return;
-    const newSong = {
-      id: Date.now(),
-      title: newSongTitle,
-      artist: newSongArtist,
+  const handleUpdateSong = async (updatedSong) => {
+    try {
+      const res = await fetch(`${API}/api/songs/update/${updatedSong._id}`, {
+        method: "PUT",
+        headers: authHeader(),
+        body: JSON.stringify({
+          title: updatedSong.title,
+          artist: updatedSong.artist,
+        }),
+      });
+      if (res.ok) {
+        setSongs(
+          songs.map((s) => (s._id === updatedSong._id ? updatedSong : s)),
+        );
+        setActiveSong(updatedSong);
+      }
+    } catch (err) {
+      console.error("Failed to update song:", err);
+    }
+  };
+
+  // GET songs on load
+  useEffect(() => {
+    const fetchSongs = async () => {
+      try {
+        const res = await fetch(`${API}/api/songs/get`, {
+          headers: authHeader(),
+        });
+        const data = await res.json();
+        if (res.ok) setSongs(data.songs);
+      } catch (err) {
+        console.error("Failed to fetch songs:", err);
+      }
     };
-    setSongs([...songs, newSong]);
-    setActiveSong(newSong);
-    setNewSongTitle("");
-    setNewSongArtist("");
-    setAdding(false);
+    fetchSongs();
+  }, []);
+
+  // POST new song
+  const handleAddSong = async () => {
+    if (!newSongTitle.trim()) return;
+    try {
+      const res = await fetch(`${API}/api/songs/add`, {
+        method: "POST",
+        headers: authHeader(),
+        body: JSON.stringify({ title: newSongTitle, artist: newSongArtist }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSongs([...songs, data.song]);
+        setActiveSong(data.song);
+        setNewSongTitle("");
+        setNewSongArtist("");
+        setAdding(false);
+      }
+    } catch (err) {
+      console.error("Failed to add song:", err);
+    }
+  };
+
+  //Update Song upon image
+  const handleSetSongImage = async (id, url) => {
+    try {
+      const res = await fetch(`${API}/api/songs/update`, {
+        method: "PUT",
+        headers: authHeader(),
+        body: JSON.stringify({
+          songId: id,
+          title: activeSong.title,
+          artist: activeSong.artist,
+          image: url,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        // Update songs list
+        setSongs((prev) =>
+          prev.map((song) => (song._id === id ? data.song : song)),
+        );
+
+        // Update active song
+        setActiveSong(data.song);
+      } else {
+        console.error("Update failed:", data.error);
+      }
+    } catch (err) {
+      console.error("Failed to update song:", err);
+    }
   };
 
   return (
-    <div className="inline-flex flex-row w-full">
+    <div className="inline-flex flex-row w-full h-[95vh]">
       <div className="w-1/4 bg-gray-900">
         <div className="border-gray-700 border-b">Songs:</div>
 
-        {/* Song List */}
         {songs.map((song) => (
           <div
-            key={song.id}
+            key={song._id}
             className="border-gray-700 border-b cursor-pointer hover:bg-gray-700 p-1"
             onClick={() => setActiveSong(song)}
           >
@@ -39,7 +121,6 @@ export default function Songs() {
           </div>
         ))}
 
-        {/* Add Song Form */}
         {adding ? (
           <div className="flex flex-col gap-1 p-2">
             <input
@@ -79,9 +160,16 @@ export default function Songs() {
         )}
       </div>
 
-      {/* Main View */}
-      <div className="h-screen w-full bg-gray-800">
-        {activeSong ? <SongsView song={activeSong} /> : <BusicView />}
+      <div className="h-[95vh] w-full bg-gray-800">
+        {activeSong ? (
+          <SongsView
+            song={activeSong}
+            onSetImage={(url) => handleSetSongImage(activeSong._id, url)}
+            onUpdateSong={handleUpdateSong}
+          />
+        ) : (
+          <BusicView />
+        )}
       </div>
     </div>
   );

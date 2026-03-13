@@ -47,8 +47,28 @@ const userSchema = new mongoose.Schema({
   passwordHash: { type: String, required: true },
   createdAt: { type: Date, default: Date.now },
 });
+const songSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  artist: { type: String, required: true },
+  image: { type: String, required: false },
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+});
 //sets the schema in the DB
 const User = mongoose.model("User", userSchema);
+const Song = mongoose.model("Song", songSchema);
+
+//middleware to verify token
+const authMiddleware = (req, res, next) => {
+  const token = req.headers.authorization?.split(" ")[1];
+  if (!token) return res.status(401).json({ error: "Unauthorized" });
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.user = decoded;
+    next();
+  } catch {
+    res.status(401).json({ error: "Invalid token" });
+  }
+};
 
 // SIGNUP
 app.post("/api/signup", async (req, res) => {
@@ -105,7 +125,7 @@ app.post("/api/login", async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, username: user.username },
       process.env.JWT_SECRET,
-      { expiresIn: "1m" },
+      { expiresIn: "7d" },
     );
 
     res.json({
@@ -128,6 +148,79 @@ app.get("/api/users/count", async (req, res) => {
     res.json({ count });
   } catch (err) {
     console.error("Count error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+//SET User's Songs:
+app.post("/api/songs/add", authMiddleware, async (req, res) => {
+  const { title, artist } = req.body;
+
+  // Basic validation
+  if (!title || !artist) {
+    return res.status(400).json({ error: "Title and Artist are required" });
+  }
+
+  try {
+    const song = await Song.create({ title, artist, userId: req.user.userId });
+
+    res.json({ message: "Song created", song });
+  } catch (err) {
+    console.error("Add Song error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+//GET User's Songs: //Lookup Cloudinary or S3
+app.get("/api/songs/get", authMiddleware, async (req, res) => {
+  try {
+    const songs = await Song.find({ userId: req.user.userId });
+    res.json({ songs });
+  } catch (err) {
+    console.error("Get Songs error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+//Update User's Songs:
+app.put("/api/songs/update", authMiddleware, async (req, res) => {
+  const { songId, title, artist, image } = req.body;
+
+  if (!songId) {
+    return res.status(400).json({ error: "songId is required" });
+  }
+
+  try {
+    const song = await Song.findOneAndUpdate(
+      { _id: songId, userId: req.user.userId },
+      { title, artist, image },
+      { new: true },
+    );
+
+    if (!song) {
+      return res.status(404).json({ error: "Song not found" });
+    }
+
+    res.json({ message: "Song updated", song });
+  } catch (err) {
+    console.error("Update Song error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+//Update Song #2
+app.put("/api/songs/update/:id", authMiddleware, async (req, res) => {
+  const { title, artist } = req.body;
+  try {
+    const song = await Song.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.userId },
+      { title, artist },
+      { new: true },
+    );
+    if (!song) return res.status(404).json({ error: "Song not found" });
+    res.json({ song });
+  } catch (err) {
+    console.error("Update song error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
