@@ -4,11 +4,14 @@ dotenv.config();
 import { createRequire } from "module";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import multer from "multer";
 
+const upload = multer({ storage: multer.memoryStorage() });
 const require = createRequire(import.meta.url);
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const cloudinary = require("cloudinary").v2;
 
 const app = express();
 
@@ -40,6 +43,13 @@ async function connect() {
 
 connect();
 
+//Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLINARY_CLOUD_NAME,
+  api_key: process.env.CLINARY_KEY,
+  api_secret: process.env.CLINARY_SECRET,
+});
+
 // Schema + Model
 const userSchema = new mongoose.Schema({
   email: { type: String, required: false, unique: true },
@@ -69,6 +79,48 @@ const authMiddleware = (req, res, next) => {
     res.status(401).json({ error: "Invalid token" });
   }
 };
+
+app.post(
+  "/api/songs/upload-image",
+  authMiddleware,
+  upload.single("image"),
+  async (req, res) => {
+    const { songId } = req.body;
+
+    if (!req.file || !songId) {
+      return res.status(400).json({ error: "Image and songId are required" });
+    }
+
+    try {
+      // Upload buffer directly to Cloudinary
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "song-covers" },
+          (error, result) => (error ? reject(error) : resolve(result)),
+        );
+        stream.end(req.file.buffer);
+      });
+
+      // Save the Cloudinary URL to the song in MongoDB
+      const song = await Song.findOneAndUpdate(
+        { _id: songId, userId: req.user.userId },
+        { image: result.secure_url },
+        { new: true },
+      );
+
+      if (!song) return res.status(404).json({ error: "Song not found" });
+
+      res.json({
+        message: "Image uploaded",
+        imageUrl: result.secure_url,
+        song,
+      });
+    } catch (err) {
+      console.error("Image upload error:", err);
+      res.status(500).json({ error: "Server error" });
+    }
+  },
+);
 
 // SIGNUP
 app.post("/api/signup", async (req, res) => {

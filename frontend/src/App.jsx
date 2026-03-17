@@ -5,6 +5,7 @@ import Error from "./pages/Error";
 import Login from "./pages/Login";
 import Recipes from "./pages/Recipes";
 import Songs from "./pages/Songs";
+import Custom from "./pages/Custom";
 import { useContext } from "react";
 import { UserProvider } from "./conProv/UserProvider";
 import { UserContext } from "./conProv/UserContext";
@@ -32,6 +33,7 @@ function AppContent() {
             </Link>
             <Link to="/Songs">Songs</Link>
             <Link to="/Recipes">Recipes</Link>
+            <Link to="/Custom">Custom</Link>
           </nav>
 
           <div className="text-white flex items-center gap-4">
@@ -74,6 +76,14 @@ function AppContent() {
             element={
               <ProtectedRoute>
                 <Songs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/Custom"
+            element={
+              <ProtectedRoute>
+                <Custom />
               </ProtectedRoute>
             }
           />

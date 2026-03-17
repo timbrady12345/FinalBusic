@@ -87,7 +87,7 @@ export default function SongsView({ song, onSetImage, onUpdateSong }) {
           }}
           onDragOver={(e) => e.preventDefault()}
         >
-          <input
+          {/* <input
             type="file"
             accept="image/*"
             className="hidden"
@@ -95,6 +95,11 @@ export default function SongsView({ song, onSetImage, onUpdateSong }) {
               const file = e.target.files[0];
               if (file) onSetImage(URL.createObjectURL(file));
             }}
+          /> */}
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => onSetImage(e.target.files[0])} // pass the File object up
           />
           {song.image ? (
             <img

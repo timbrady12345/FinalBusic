@@ -75,34 +75,30 @@ export default function Songs() {
   };
 
   //Update Song upon image
-  const handleSetSongImage = async (id, url) => {
+  const handleSetSongImage = async (id, file) => {
     try {
-      const res = await fetch(`${API}/api/songs/update`, {
-        method: "PUT",
-        headers: authHeader(),
-        body: JSON.stringify({
-          songId: id,
-          title: activeSong.title,
-          artist: activeSong.artist,
-          image: url,
-        }),
+      const formData = new FormData();
+      formData.append("image", file); // the actual File object
+      formData.append("songId", id); // the song to update
+
+      const res = await fetch(`${API}/api/songs/upload-image`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        body: formData,
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        // Update songs list
         setSongs((prev) =>
           prev.map((song) => (song._id === id ? data.song : song)),
         );
-
-        // Update active song
         setActiveSong(data.song);
       } else {
-        console.error("Update failed:", data.error);
+        console.error("Upload failed:", data.error);
       }
     } catch (err) {
-      console.error("Failed to update song:", err);
+      console.error("Failed to upload image:", err);
     }
   };
 
@@ -164,7 +160,7 @@ export default function Songs() {
         {activeSong ? (
           <SongsView
             song={activeSong}
-            onSetImage={(url) => handleSetSongImage(activeSong._id, url)}
+            onSetImage={(file) => handleSetSongImage(activeSong._id, file)}
             onUpdateSong={handleUpdateSong}
           />
         ) : (
