@@ -17,7 +17,7 @@ export default function SongsView({ song, onSetImage, onUpdateSong }) {
   };
 
   const handleSave = () => {
-    onUpdateSong({ ...song, title, artist });
+    onUpdateSong({ ...song, title, artist, notes });
     setEditing(false);
   };
 
@@ -79,27 +79,19 @@ export default function SongsView({ song, onSetImage, onUpdateSong }) {
       {/* Album Cover */}
       <div className="flex flex-col p-4 w-full">
         <label
-          className="w-60 h-60 bg-white cursor-pointer flex items-center justify-center overflow-hidden"
+          className="w-60 h-60 cursor-pointer flex flex-col"
           onDrop={(e) => {
             e.preventDefault();
             const file = e.dataTransfer.files[0];
-            if (file) onSetImage(URL.createObjectURL(file));
+            if (file) onSetImage(file);
           }}
           onDragOver={(e) => e.preventDefault()}
         >
-          {/* <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files[0];
-              if (file) onSetImage(URL.createObjectURL(file));
-            }}
-          /> */}
           <input
             type="file"
             accept="image/*"
-            onChange={(e) => onSetImage(e.target.files[0])} // pass the File object up
+            className="hidden"
+            onChange={(e) => onSetImage(e.target.files[0])}
           />
           {song.image ? (
             <img

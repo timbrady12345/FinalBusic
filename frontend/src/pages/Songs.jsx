@@ -14,6 +14,7 @@ export default function Songs() {
   const [adding, setAdding] = useState(false);
   const [newSongTitle, setNewSongTitle] = useState("");
   const [newSongArtist, setNewSongArtist] = useState("");
+  const [newSongNotes, setNewSongNotes] = useState("");
 
   const handleUpdateSong = async (updatedSong) => {
     try {
@@ -23,6 +24,7 @@ export default function Songs() {
         body: JSON.stringify({
           title: updatedSong.title,
           artist: updatedSong.artist,
+          notes: updatedSong.notes,
         }),
       });
       if (res.ok) {
@@ -59,7 +61,11 @@ export default function Songs() {
       const res = await fetch(`${API}/api/songs/add`, {
         method: "POST",
         headers: authHeader(),
-        body: JSON.stringify({ title: newSongTitle, artist: newSongArtist }),
+        body: JSON.stringify({
+          title: newSongTitle,
+          artist: newSongArtist,
+          notes: newSongNotes,
+        }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -67,6 +73,7 @@ export default function Songs() {
         setActiveSong(data.song);
         setNewSongTitle("");
         setNewSongArtist("");
+        setNewSongNotes("");
         setAdding(false);
       }
     } catch (err) {
@@ -159,6 +166,7 @@ export default function Songs() {
       <div className="h-[95vh] w-full bg-gray-800">
         {activeSong ? (
           <SongsView
+            key={activeSong._id}
             song={activeSong}
             onSetImage={(file) => handleSetSongImage(activeSong._id, file)}
             onUpdateSong={handleUpdateSong}
@@ -170,23 +178,3 @@ export default function Songs() {
     </div>
   );
 }
-// export default function Songs() {
-//   const [songs, setSongs] = useState([]); // fetched from API
-//   const [activeSong, setActiveSong] = useState(null);
-
-//   return (
-//     <div className="inline-flex flex-row">
-//       <div className="w-1/4 bg-gray-900">
-//         {songs.map(song => (
-//           <div key={song._id} onClick={() => setActiveSong(song)}>
-//             {song.title}
-//           </div>
-//         ))}
-//       </div>
-
-//       <div className="h-screen w-full bg-gray-800">
-//         {activeSong ? <SongView song={activeSong} /> : <BusicView />}
-//       </div>
-//     </div>
-//   );
-// }

@@ -61,6 +61,7 @@ const songSchema = new mongoose.Schema({
   title: { type: String, required: true },
   artist: { type: String, required: true },
   image: { type: String, required: false },
+  notes: { type: String, default: "" },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 //sets the schema in the DB
@@ -223,7 +224,7 @@ app.post("/api/songs/add", authMiddleware, async (req, res) => {
   }
 });
 
-//GET User's Songs: //Lookup Cloudinary or S3
+//GET User's Songs:
 app.get("/api/songs/get", authMiddleware, async (req, res) => {
   try {
     const songs = await Song.find({ userId: req.user.userId });
@@ -234,39 +235,13 @@ app.get("/api/songs/get", authMiddleware, async (req, res) => {
   }
 });
 
-//Update User's Songs:
-app.put("/api/songs/update", authMiddleware, async (req, res) => {
-  const { songId, title, artist, image } = req.body;
-
-  if (!songId) {
-    return res.status(400).json({ error: "songId is required" });
-  }
-
-  try {
-    const song = await Song.findOneAndUpdate(
-      { _id: songId, userId: req.user.userId },
-      { title, artist, image },
-      { new: true },
-    );
-
-    if (!song) {
-      return res.status(404).json({ error: "Song not found" });
-    }
-
-    res.json({ message: "Song updated", song });
-  } catch (err) {
-    console.error("Update Song error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
 //Update Song #2
 app.put("/api/songs/update/:id", authMiddleware, async (req, res) => {
-  const { title, artist } = req.body;
+  const { title, artist, notes } = req.body;
   try {
     const song = await Song.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.userId },
-      { title, artist },
+      { title, artist, notes },
       { new: true },
     );
     if (!song) return res.status(404).json({ error: "Song not found" });
