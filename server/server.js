@@ -64,9 +64,24 @@ const songSchema = new mongoose.Schema({
   notes: { type: String, default: "" },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
+const recipeSchema = new mongoose.Schema(
+  {
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    title: { type: String, required: true },
+    description: { type: String, default: "" },
+    notes: { type: String, default: "" },
+    image: { type: String, default: "" },
+  },
+  { timestamps: true },
+);
 //sets the schema in the DB
 const User = mongoose.model("User", userSchema);
 const Song = mongoose.model("Song", songSchema);
+const Recipe = mongoose.model("Recipe", recipeSchema);
 
 //middleware to verify token
 const authMiddleware = (req, res, next) => {
@@ -251,6 +266,66 @@ app.put("/api/songs/update/:id", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+////////////////////////////////////////////RECIPES
+// GET recipes
+app.get("/api/recipes/get", authMiddleware, async (req, res) => {
+  try {
+    const recipes = await Recipe.find({ userId: req.user.userId });
+    res.json({ recipes });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST new recipe
+app.post("/api/recipes/add", authMiddleware, async (req, res) => {
+  const { title, description } = req.body;
+  try {
+    const recipe = new Recipe({ userId: req.user.userId, title, description });
+    await recipe.save();
+    res.json({ recipe });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// PUT update recipe
+app.put("/api/recipes/update/:id", authMiddleware, async (req, res) => {
+  const { title, description, notes } = req.body;
+  try {
+    const recipe = await Recipe.findOneAndUpdate(
+      { _id: req.params.id, userId: req.user.userId },
+      { title, description, notes },
+      { new: true },
+    );
+    if (!recipe) return res.status(404).json({ error: "Recipe not found" });
+    res.json({ recipe });
+  } catch (err) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// POST upload image
+app.post(
+  "/api/recipes/upload-image",
+  authMiddleware,
+  upload.single("image"),
+  async (req, res) => {
+    const { recipeId } = req.body;
+    try {
+      const imageUrl = `/uploads/${req.file.filename}`;
+      const recipe = await Recipe.findOneAndUpdate(
+        { _id: recipeId, userId: req.user.userId },
+        { image: imageUrl },
+        { new: true },
+      );
+      if (!recipe) return res.status(404).json({ error: "Recipe not found" });
+      res.json({ recipe });
+    } catch (err) {
+      res.status(500).json({ error: "Server error" });
+    }
+  },
+);
 
 // Start server
 const PORT = process.env.PORT || 8000;
