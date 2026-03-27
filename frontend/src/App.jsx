@@ -3,9 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Error from "./pages/Error";
 import Login from "./pages/Login";
-import Recipes from "./pages/Recipes";
-import Songs from "./pages/Songs";
-import Custom from "./pages/Custom";
+import Collections from "./pages/Collections";
 import { useContext } from "react";
 import { UserProvider } from "./conProv/UserProvider";
 import { UserContext } from "./conProv/UserContext";
@@ -31,9 +29,7 @@ function AppContent() {
             <Link className="w-auto pr-8 text-left" to="/">
               <h1>Busic</h1>
             </Link>
-            <Link to="/Songs">Songs</Link>
-            <Link to="/Recipes">Recipes</Link>
-            <Link to="/Custom">Custom</Link>
+            <Link to="/Collections">Memories</Link>
           </nav>
 
           <div className="text-white flex items-center gap-4">
@@ -48,7 +44,7 @@ function AppContent() {
                 Sign Out
               </button>
             )}
-            {user && <p className="username ">{user.username}</p>}
+            {user && <p className="username">{user.username}</p>}
           </div>
         </div>
       )}
@@ -64,26 +60,10 @@ function AppContent() {
             }
           />
           <Route
-            path="/Recipes"
+            path="/Collections"
             element={
               <ProtectedRoute>
-                <Recipes />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Songs"
-            element={
-              <ProtectedRoute>
-                <Songs />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/Custom"
-            element={
-              <ProtectedRoute>
-                <Custom />
+                <Collections />
               </ProtectedRoute>
             }
           />

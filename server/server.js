@@ -64,24 +64,32 @@ const songSchema = new mongoose.Schema({
   notes: { type: String, default: "" },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
-const recipeSchema = new mongoose.Schema(
+const itemSchema = new mongoose.Schema(
+  {
+    title: { type: String, required: true },
+    subtitle: { type: String, default: "" },
+    notes: { type: String, default: "" },
+    image: { type: String, default: "" },
+  },
+  { timestamps: true },
+);
+
+const collectionSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    title: { type: String, required: true },
-    description: { type: String, default: "" },
-    notes: { type: String, default: "" },
-    image: { type: String, default: "" },
+    name: { type: String, required: true }, // e.g. "Songs", "Recipes"
+    items: [itemSchema],
   },
   { timestamps: true },
 );
 //sets the schema in the DB
 const User = mongoose.model("User", userSchema);
 const Song = mongoose.model("Song", songSchema);
-const Recipe = mongoose.model("Recipe", recipeSchema);
+const Collection = mongoose.model("Collection", collectionSchema);
 
 //middleware to verify token
 const authMiddleware = (req, res, next) => {
@@ -220,107 +228,108 @@ app.get("/api/users/count", async (req, res) => {
   }
 });
 
-//SET User's Songs:
-app.post("/api/songs/add", authMiddleware, async (req, res) => {
-  const { title, artist } = req.body;
-
-  // Basic validation
-  if (!title || !artist) {
-    return res.status(400).json({ error: "Title and Artist are required" });
-  }
-
-  try {
-    const song = await Song.create({ title, artist, userId: req.user.userId });
-
-    res.json({ message: "Song created", song });
-  } catch (err) {
-    console.error("Add Song error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
+// GET all collections for user
+app.get("/api/collections", authMiddleware, async (req, res) => {
+  const collections = await Collection.find({ userId: req.user.userId });
+  res.json({ collections });
 });
 
-//GET User's Songs:
-app.get("/api/songs/get", authMiddleware, async (req, res) => {
-  try {
-    const songs = await Song.find({ userId: req.user.userId });
-    res.json({ songs });
-  } catch (err) {
-    console.error("Get Songs error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
+// POST create new collection
+app.post("/api/collections", authMiddleware, async (req, res) => {
+  const { name } = req.body;
+  const collection = new Collection({
+    userId: req.user.userId,
+    name,
+  });
+  await collection.save();
+  res.json({ collection });
 });
 
-//Update Song #2
-app.put("/api/songs/update/:id", authMiddleware, async (req, res) => {
-  const { title, artist, notes } = req.body;
-  try {
-    const song = await Song.findOneAndUpdate(
-      { _id: req.params.id, userId: req.user.userId },
-      { title, artist, notes },
+// POST add item to collection
+app.post("/api/collections/:id/items", authMiddleware, async (req, res) => {
+  const { title, subtitle } = req.body;
+  const collection = await Collection.findOneAndUpdate(
+    { _id: req.params.id, userId: req.user.userId },
+    { $push: { items: { title, subtitle } } },
+    { new: true },
+  );
+  res.json({ collection });
+});
+
+// PUT update item
+app.put(
+  "/api/collections/:id/items/:itemId",
+  authMiddleware,
+  async (req, res) => {
+    const { title, subtitle, notes } = req.body;
+    const collection = await Collection.findOneAndUpdate(
+      {
+        _id: req.params.id,
+        "items._id": req.params.itemId,
+        userId: req.user.userId,
+      },
+      {
+        $set: {
+          "items.$.title": title,
+          "items.$.subtitle": subtitle,
+          "items.$.notes": notes,
+        },
+      },
       { new: true },
     );
-    if (!song) return res.status(404).json({ error: "Song not found" });
-    res.json({ song });
-  } catch (err) {
-    console.error("Update song error:", err);
-    res.status(500).json({ error: "Server error" });
-  }
-});
-////////////////////////////////////////////RECIPES
-// GET recipes
-app.get("/api/recipes/get", authMiddleware, async (req, res) => {
-  try {
-    const recipes = await Recipe.find({ userId: req.user.userId });
-    res.json({ recipes });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
+    res.json({ collection });
+  },
+);
 
-// POST new recipe
-app.post("/api/recipes/add", authMiddleware, async (req, res) => {
-  const { title, description } = req.body;
-  try {
-    const recipe = new Recipe({ userId: req.user.userId, title, description });
-    await recipe.save();
-    res.json({ recipe });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
-});
-
-// PUT update recipe
-app.put("/api/recipes/update/:id", authMiddleware, async (req, res) => {
-  const { title, description, notes } = req.body;
-  try {
-    const recipe = await Recipe.findOneAndUpdate(
+// DELETE item
+app.delete(
+  "/api/collections/:id/items/:itemId",
+  authMiddleware,
+  async (req, res) => {
+    const collection = await Collection.findOneAndUpdate(
       { _id: req.params.id, userId: req.user.userId },
-      { title, description, notes },
+      { $pull: { items: { _id: req.params.itemId } } },
       { new: true },
     );
-    if (!recipe) return res.status(404).json({ error: "Recipe not found" });
-    res.json({ recipe });
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
+    res.json({ collection });
+  },
+);
+
+// DELETE collection
+app.delete("/api/collections/:id", authMiddleware, async (req, res) => {
+  await Collection.findOneAndDelete({
+    _id: req.params.id,
+    userId: req.user.userId,
+  });
+  res.json({ message: "Deleted" });
 });
 
-// POST upload image
 app.post(
-  "/api/recipes/upload-image",
+  "/api/collections/:id/items/:itemId/upload-image",
   authMiddleware,
   upload.single("image"),
   async (req, res) => {
-    const { recipeId } = req.body;
     try {
-      const imageUrl = `/uploads/${req.file.filename}`;
-      const recipe = await Recipe.findOneAndUpdate(
-        { _id: recipeId, userId: req.user.userId },
-        { image: imageUrl },
+      const result = await new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder: "collection-items" },
+          (error, result) => (error ? reject(error) : resolve(result)),
+        );
+        stream.end(req.file.buffer);
+      });
+
+      const collection = await Collection.findOneAndUpdate(
+        {
+          _id: req.params.id,
+          "items._id": req.params.itemId,
+          userId: req.user.userId,
+        },
+        { $set: { "items.$.image": result.secure_url } },
         { new: true },
       );
-      if (!recipe) return res.status(404).json({ error: "Recipe not found" });
-      res.json({ recipe });
+      if (!collection) return res.status(404).json({ error: "Not found" });
+      const item = collection.items.id(req.params.itemId);
+      res.json({ item, collection });
     } catch (err) {
       res.status(500).json({ error: "Server error" });
     }
